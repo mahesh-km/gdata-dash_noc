@@ -1,0 +1,13 @@
+#auto close close waits!
+netstat -tonp | grep CLOSE_WAIT | awk '{print $5}' | sort  | awk -F: '{print $1}' | sort | uniq  > /tmp/list_of_ip
+for IP in `cat /tmp/list_of_ip`;
+do
+        COUNT=`netstat -tonp | grep $IP | grep CLOSE_WAIT | wc -l` ;
+        if [ $COUNT -gt 10 ] ;
+        then
+                netstat -anp | grep $IP | grep ':10001' | grep CLOSE_WAIT | awk '{print $7}' | cut -d \/ -f1 | grep -oE "[[:digit:]]{1,}" | xargs kill
+		echo IP $IP COUNT $COUNT -CLOSE_WAIT Removed;
+        fi;
+done
+
+#netstat -anp | grep 223.182.34.81 | grep ':10001' | grep CLOSE_WAIT | awk '{print $7}' | cut -d \/ -f1 | grep -oE "[[:digit:]]{1,}" | xargs kill

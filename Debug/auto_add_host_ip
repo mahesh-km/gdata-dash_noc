@@ -1,0 +1,34 @@
+#!/bin/bash
+LOG="/opt/Debug/update-iptable.log"
+TIME=`date +%Y-%m-%d-%H-%M-%S`
+/sbin/iptables -F
+/sbin/iptables -I INPUT -p tcp -m tcp -s 0.0.0.0/0 --dport 10001 -j DROP
+/sbin/iptables -I INPUT -p tcp -m tcp -s 127.0.0.1 --dport 10001 -j ACCEPT
+/sbin/iptables -I INPUT -p tcp -m tcp -s 107.170.3.163 --dport 10001 -j ACCEPT
+/sbin/iptables -I INPUT -p udp -m udp -s 0.0.0.0/0 --dport 33333 -j ACCEPT
+echo "update iptables with known hosts ip" | tee ${LOG}
+for IP in `cat /opt/Debug/Debug_MMonit_Hostnames`
+#for IP in `cat /opt/Debug/Known_Dyndns_hostnames`
+do 
+	address1=`host $IP | awk '{print $1}'`
+	address=`host $IP | awk '{print $4}'`
+        /sbin/iptables -I INPUT -p tcp -m tcp -s $address --dport 10001 -j ACCEPT
+	echo $TIME $address1 $address "Added to iptable" | tee -a ${LOG}
+done
+echo "___________________________________________________________" | tee -a ${LOG}
+#
+#
+#
+#netstat -tonp | grep CLOSE_WAIT | awk '{print $5}' | sort  | awk -F: '{print $1}' | sort | uniq  > /tmp/list_of_ip
+#for IP in `cat /tmp/list_of_ip`;
+#do
+#        COUNT=`netstat -tonp | grep $IP | grep CLOSE_WAIT | wc -l` ;
+#        if [ $COUNT -gt 30 ] ;
+#        then
+#                echo "IP" $IP "COUNT" $COUNT | tee -a ${LOG}
+#               /sbin/iptables -I INPUT -s $IP -j DROP;
+#	else
+#	  	echo  $IP "This IP not in CLOSE_WAIT"
+#        fi;
+#done
+
